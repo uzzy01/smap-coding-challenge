@@ -1,7 +1,103 @@
 {% extends 'consumption/layout.html' %}
 
 {% block content %}
+    <div class="container">
 
-<h1>{{message}}</h1>
+        {% if user_data %}
+            <div class="display-4 py-4">
+                <span>Summary for all users (Total Consumption / Month)</span>
+            </div>
+
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Area</th>
+                        <th scope="col">Tariff</th>
+                        <th scope="col"></td>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in user_data %}
+                    <tr>
+                        <th scope="row">{{ row.user_id }}</th>
+                        <td>{{ row.area }}</td>
+                        <td>{{ row.tariff }}</td>
+                        <td><a href="{% url 'detail' user_id=row.user_id %}" class="btn btn-link">Detail</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="row">
+                <div class="col-12">
+                    <canvas id="total_by_months"></canvas>
+                </div>
+                <div class="col-12">
+                    <canvas id="avg_by_months"></canvas>
+                </div>
+            </div>
+
+        {% else %}
+            <p class="lead">No user data.</p>
+        {% endif %}
+    </div>
+    <script>
+        
+        window.onload = function(e){
+            monthArr = [];
+            totalArr = [];
+            avgArr = [];
+            data = {{ total_consumption|safe }};
+
+            data.map(function(value){
+                monthArr.push(value.month);
+                totalArr.push(value.sum);
+                avgArr.push(value.avg);
+            });
+                    
+            // build chart
+            var ctx = document.getElementById('total_by_months').getContext('2d');
+            create_chart(monthArr, totalArr, 'bar', ctx, 'Total');
+            
+            var ctx2 = document.getElementById('avg_by_months').getContext('2d');
+            create_chart(monthArr, avgArr, 'line', ctx2, 'Avg');
+        };
+
+        function create_chart(x, y, type, ctx, label) {
+            var chart = new Chart(ctx, {
+                // The type of chart we want to create
+                type: type,
+                // The data for our dataset
+                data: {
+                    labels: x,
+                    datasets: [{
+                        label: label + " Monthly Consumption",
+                        backgroundColor: 'rgb(255, 65, 120)',
+                        borderColor: 'rgb(255, 99, 132)',
+                        data: y
+                    }]
+                },
+
+                // Configuration options go here
+                options : {
+                        scales: {
+                            yAxes: [{
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: label + ' Consumption (Wh)'
+                                }
+                            }],
+                            xAxes: [{
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: 'Months'
+                                }
+                            }],
+                        }
+                    }
+            });
+        }
+    </script>
 
 {% endblock %}

@@ -2,4 +2,75 @@
 
 {% block content %}
 
+    <div class="container">
+        <div class="display-4">
+            <span>Detailed Consumption by {{ user_detail.user_id }}</span>
+        </div>
+
+        <a href="{% url 'summary' %}" class="btn btn-link py-4">Back to Summary</a>
+
+        <ul class="list-group">
+            <li class="list-group-item">Area: {{ user_detail.area }}</li>
+            <li class="list-group-item">Tariff: {{ user_detail.tariff }}</li>
+            <li class="list-group-item">Average Consumption (Wh): {{ aggregated_user_data.avg }}</li>
+            <li class="list-group-item">Total Consumption (Wh): {{ aggregated_user_data.sum }}</li>
+        </ul>
+
+        <div class="py-4">
+            <canvas id='user_consumption'></canvas>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function (e) {
+            monthArr = [];
+            totalArr = [];
+            data = {{ user_consumption | safe }};
+
+            data.map(function (value) {
+                monthArr.push(value.month);
+                totalArr.push(value.sum);
+            });
+
+            // build chart
+            create_chart(monthArr, totalArr);
+        };
+
+        function create_chart(x, y) {
+            var ctx = document.getElementById('user_consumption').getContext('2d');
+            var chart = new Chart(ctx, {
+                // The type of chart we want to create
+                type: 'bar',
+
+                // The data for our dataset
+                data: {
+                    labels: x,
+                    datasets: [{
+                        label: "Total Monthly Consumption",
+                        backgroundColor: 'rgb(66, 217, 244)',
+                        borderColor: 'rgb(42, 132, 147)',
+                        data: y
+                    }]
+                },
+
+                options: {
+                    scales: {
+                        yAxes: [{
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Total Consumption (Wh)'
+                            }
+                        }],
+                        xAxes: [{
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Months'
+                            }
+                        }],
+                    }
+                }
+            });
+        }
+    </script>
+
 {% endblock %}
